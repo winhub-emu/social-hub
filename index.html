@@ -134,6 +134,9 @@ pre{margin:12px 0 0;max-height:300px;overflow:auto;background:#070c12;border:1px
   var grid = $('grid'), moreBtn = $('more'), sheet = $('sheet'), scrim = $('scrim');
   var state = { q: '', socs: {}, dxvk: '', drv: '', sort: 'count' };
   var lastFocus = null;
+  var issueText = {};
+  var refreshFilters = function () {};
+  var MARKER = '<!--winhub-config-->';
 
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
   function socFamily(soc) {
@@ -204,7 +207,9 @@ pre{margin:12px 0 0;max-height:300px;overflow:auto;background:#070c12;border:1px
   function pill(text, color) { return text ? '<span class="pill" style="--c:' + color + '">' + esc(text) + '</span>' : ''; }
   function cfgCard(g, c, idx) {
     var line = [c.proton, c.res].filter(Boolean).join(' · ');
-    return '<div class="cfg" data-f="' + esc(c.f) + '"><h4>' + esc(c.dev || 'Unknown device') + '</h4><div class="sub">' + esc(c.soc || '') + '</div>' +
+    return '<div class="cfg" data-f="' + esc(c.f) + '"><h4>' + esc(c.dev || 'Unknown device') + '</h4><div class="sub">' + esc(c.soc || '') +
+      (c.by ? ' · shared by @' + esc(c.by) : '') + '</div>' +
+      (c.note ? '<div class="line">“' + esc(c.note) + '”</div>' : '') +
       (line ? '<div class="line">' + esc(line) + '</div>' : '') +
       '<div class="pills">' + pill(c.drv && ('Driver ' + c.drv), 'var(--c-driver)') + pill(c.dxvk && ('DXVK ' + c.dxvk), 'var(--c-dxvk)') +
       pill(c.vkd3d && ('VKD3D ' + c.vkd3d), 'var(--c-vkd3d)') + pill(c.fex && c.cpu !== 'box64' && ('FEX ' + c.fex), 'var(--c-fex)') +
@@ -242,7 +247,7 @@ pre{margin:12px 0 0;max-height:300px;overflow:auto;background:#070c12;border:1px
   $('sbody').addEventListener('click', function (e) {
     var b = e.target.closest('[data-act]'); if (!b) return;
     var card = b.closest('.cfg'), id = $('sbody').dataset.id, f = card.dataset.f, act = b.dataset.act;
-    fetchCfg(id, f).then(function (txt) {
+    (f.indexOf('issue-') === 0 ? Promise.resolve(issueText[f]) : fetchCfg(id, f)).then(function (txt) {
       if (act === 'view') {
         var out = card.querySelector('.out'), pre = out.querySelector('pre');
         if (pre) { pre.remove(); b.textContent = 'View'; return; }
@@ -327,6 +332,62 @@ pre{margin:12px 0 0;max-height:300px;overflow:auto;background:#070c12;border:1px
   }
   requestAnimationFrame(poll);
 
+  /* ---- configs shared as GitHub issues (label "Configs") ---- */
+  function norm(x) { return String(x || '').toLowerCase().replace(/[^a-z0-9]/g, ''); }
+  function compName(v) { try { return (typeof v === 'string' ? JSON.parse(v) : v || {}).name || ''; } catch (e) { return ''; } }
+  function parseIssueBody(body) {
+    var m = (body || '').indexOf(MARKER);
+    if (m < 0) return null;
+    var open = body.indexOf('```json', m); if (open < 0) return null;
+    var start = body.indexOf('\n', open); var end = body.indexOf('```', start); if (start < 0 || end < 0) return null;
+    var note = body.slice(0, m).trim();
+    try { return { cfg: JSON.parse(body.slice(start + 1, end)), note: note }; } catch (e) { return null; }
+  }
+  function mergeIssues(issues) {
+    var byKey = {}; games.forEach(function (g) { byKey[norm(g.name)] = g; byKey[norm(g.id)] = g; });
+    var added = 0;
+    issues.forEach(function (is) {
+      if (is.pull_request) return;
+      var p = parseIssueBody(is.body); if (!p || !p.cfg || !p.cfg.settings) return;
+      var cfg = p.cfg, meta = cfg.meta || {}, s = cfg.settings || {}, ext = s.bl_ext || {};
+      // The page shows the hardware and components only; app/account fields are not republished.
+      ['app_source', 'bh_version', 'upload_token', 'uploader'].forEach(function (k) { delete meta[k]; });
+      cfg.meta = meta;
+      var title = (is.title || '').trim(); if (!title) return;
+      var g = byKey[norm(title)];
+      if (!g) {
+        var appid = /^\d+$/.test(String(meta.steam_appid || '')) ? +meta.steam_appid : 0;
+        g = { id: title, name: title, appid: appid, configs: [], _issueOnly: true }; games.push(g); byKey[norm(title)] = g;
+      }
+      var key = 'issue-' + is.number;
+      issueText[key] = JSON.stringify(cfg, null, 2);
+      g.configs.unshift({
+        f: key, by: is.user && is.user.login, note: p.note,
+        dev: meta.device || '', soc: meta.soc || '', drv: compName(s.pc_ls_GPU_DRIVER_), dxvk: compName(s.pc_ls_DXVK),
+        vkd3d: compName(s.pc_ls_VK3k), fex: compName(s.pc_set_constant_95), proton: compName(s.pc_ls_CONTAINER_LIST),
+        wrap: s.pc_ls_GRAPHICS_WRAPPER || '', res: ext.screenSize || '', rnd: ext.renderer || '', fg: ext.frameGenEngine || '',
+        cpu: ext.emulator || '', preset: ext.fexcorePreset || ext.box64Preset || ''
+      });
+      added++;
+    });
+    return added;
+  }
+  function loadIssues(page, acc) {
+    return fetch('https://api.github.com/repos/winhub-emu/social-hub/issues?labels=Configs&state=open&per_page=100&page=' + page,
+      { headers: { Accept: 'application/vnd.github+json' } })
+      .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+      .then(function (items) { acc = acc.concat(items); return items.length === 100 && page < 5 ? loadIssues(page + 1, acc) : acc; });
+  }
+  function addIssueConfigs() {
+    loadIssues(1, []).then(function (issues) {
+      if (!mergeIssues(issues)) return;
+      games.forEach(function (g) {
+        g._hay = [g.name, g.id].concat(g.configs.map(function (c) { return [c.dev, c.soc, c.drv, c.dxvk].join(' '); })).join(' ').toLowerCase();
+      });
+      refreshFilters(); apply();
+    }).catch(function () { /* GitHub rate limit or offline: the library alone is still complete */ });
+  }
+
   /* ---- boot ---- */
   fetch('configs/index.json').then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); }).then(function (data) {
     games = data;
@@ -337,12 +398,20 @@ pre{margin:12px 0 0;max-height:300px;overflow:auto;background:#070c12;border:1px
       g._hay = parts.join(' ').toLowerCase();
     });
     function fill(sel, map) {
+      var keep = sel.value; sel.length = 1;
       Object.keys(map).sort(function (a, b) { return map[b] - map[a]; }).slice(0, 40).forEach(function (k) {
         var o = document.createElement('option'); o.value = k; o.textContent = k + ' (' + map[k] + ')'; sel.appendChild(o);
       });
+      sel.value = keep;
     }
-    fill($('dxvk'), dx); fill($('drv'), dr);
+    refreshFilters = function () {
+      var dx2 = {}, dr2 = {};
+      games.forEach(function (g) { g.configs.forEach(function (c) { if (c.dxvk) dx2[c.dxvk] = (dx2[c.dxvk] || 0) + 1; if (c.drv) dr2[c.drv] = (dr2[c.drv] || 0) + 1; }); });
+      fill($('dxvk'), dx2); fill($('drv'), dr2);
+    };
+    refreshFilters();
     apply();
+    addIssueConfigs();
     var id = decodeURIComponent(location.hash.slice(1));
     if (id) { var g = games.filter(function (x) { return x.id === id; })[0]; if (g) openGame(g); }
   }).catch(function (err) {
