@@ -19,7 +19,7 @@
       "screenSize": "1920x1080",
       "renderer": "surfaceflinger",
       "fullscreenMode": "2",
-      "frameGenEngine": "bionic",
+      "frameGenEngine": "off",
       "native": "false",
       "swapRB": "false",
       "presentMode": "fifo",

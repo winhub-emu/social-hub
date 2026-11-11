@@ -21,7 +21,7 @@
       "renderer": "surfaceflinger",
       "sfCompatMode": "1",
       "fullscreenMode": "0",
-      "frameGenEngine": "bionic",
+      "frameGenEngine": "off",
       "fpsLimiterEnabled": "1",
       "sharpnessEffect": "None",
       "sharpnessLevel": "100",

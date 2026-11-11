@@ -21,7 +21,7 @@
       "renderScale": "2.0",
       "sfCompatMode": "1",
       "fullscreenMode": "2",
-      "frameGenEngine": "bionic",
+      "frameGenEngine": "off",
       "fpsLimiterEnabled": "1",
       "sharpnessEffect": "None",
       "sharpnessLevel": "100",

@@ -21,7 +21,7 @@
       "screenSize": "1280x720",
       "renderer": "opengl",
       "fullscreenMode": "2",
-      "frameGenEngine": "bionic",
+      "frameGenEngine": "off",
       "fpsLimiterEnabled": "0",
       "sharpnessEffect": "None",
       "sharpnessLevel": "100",

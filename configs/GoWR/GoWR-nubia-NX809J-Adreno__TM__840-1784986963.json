@@ -22,7 +22,7 @@
       "renderScale": "2.0",
       "sfCompatMode": "1",
       "fullscreenMode": "2",
-      "frameGenEngine": "bionic",
+      "frameGenEngine": "off",
       "native": "true",
       "swapRB": "false",
       "presentMode": "fifo",

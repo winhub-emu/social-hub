@@ -19,7 +19,7 @@
       "screenSize": "800x600",
       "renderer": "opengl",
       "fullscreenMode": "2",
-      "frameGenEngine": "bionic",
+      "frameGenEngine": "off",
       "native": "false",
       "swapRB": "false",
       "presentMode": "fifo",

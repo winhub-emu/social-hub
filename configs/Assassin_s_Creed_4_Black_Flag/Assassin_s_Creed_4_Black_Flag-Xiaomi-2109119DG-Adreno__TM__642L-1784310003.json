@@ -20,7 +20,7 @@
       "screenSize": "800x600",
       "renderer": "vulkan",
       "fullscreenMode": "0",
-      "frameGenEngine": "bionic",
+      "frameGenEngine": "off",
       "fpsLimiterEnabled": "0",
       "sharpnessEffect": "None",
       "sharpnessLevel": "100",

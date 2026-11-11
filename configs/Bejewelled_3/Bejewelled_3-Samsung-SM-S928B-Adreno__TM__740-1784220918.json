@@ -21,7 +21,7 @@
       "renderer": "vulkan",
       "sfCompatMode": "1",
       "fullscreenMode": "0",
-      "frameGenEngine": "bionic",
+      "frameGenEngine": "off",
       "fpsLimiterEnabled": "0",
       "sharpnessEffect": "CAS",
       "sharpnessLevel": "100",

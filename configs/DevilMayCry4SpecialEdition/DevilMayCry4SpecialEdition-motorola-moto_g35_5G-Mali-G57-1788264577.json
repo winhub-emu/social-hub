@@ -21,7 +21,7 @@
       "renderer": "opengl",
       "sfCompatMode": "1",
       "fullscreenMode": "2",
-      "frameGenEngine": "bionic",
+      "frameGenEngine": "off",
       "native": "false",
       "swapRB": "false",
       "presentMode": "immediate",

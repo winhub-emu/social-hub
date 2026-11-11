@@ -19,7 +19,7 @@
       "screenSize": "960x544",
       "renderer": "opengl",
       "fullscreenMode": "0",
-      "frameGenEngine": "bionic",
+      "frameGenEngine": "off",
       "native": "false",
       "swapRB": "false",
       "presentMode": "fifo",

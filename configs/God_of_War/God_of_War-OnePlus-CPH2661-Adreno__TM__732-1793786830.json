@@ -21,7 +21,7 @@
       "screenSize": "960x544",
       "renderer": "vulkan",
       "fullscreenMode": "2",
-      "frameGenEngine": "bionic",
+      "frameGenEngine": "off",
       "native": "false",
       "swapRB": "false",
       "presentMode": "fifo",
