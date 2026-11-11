@@ -1,0 +1,355 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b1118">
+<title>WinHub Configs</title>
+<meta name="description" content="Browse community game configs for WinHub: graphics driver, DXVK, VKD3D, FEX and more, per game and per device.">
+<style>
+:root{
+  --bg:#0b1118;--surface:#121b26;--surface2:#1b2735;--line:rgba(255,255,255,.10);--line2:rgba(255,255,255,.18);
+  --fg:#e6e9ec;--mute:#8d97a3;--acc:#1a9fff;--acc-d:#0b6fc2;--on-acc:#04121f;
+  --c-driver:#ffb02e;--c-dxvk:#5bd6a6;--c-vkd3d:#c08cff;--c-fex:#ff8a5c;--c-fg:#ff6fae;--c-rend:#36d1dc;
+  --r:18px;--gutter:max(16px,env(safe-area-inset-left));
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+body{min-height:100vh;background:
+  radial-gradient(900px 500px at 8% -10%,rgba(26,159,255,.16),transparent 60%),
+  radial-gradient(700px 420px at 100% 0%,rgba(192,140,255,.10),transparent 60%),var(--bg);background-attachment:fixed}
+button,input,select{font:inherit;color:inherit}
+.wrap{max-width:1280px;margin:0 auto;padding:0 var(--gutter) 96px}
+
+/* header */
+header{position:sticky;top:0;z-index:20;padding:14px 0 10px;background:linear-gradient(var(--bg) 70%,transparent)}
+.top{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.brand{display:flex;align-items:baseline;gap:10px;margin-right:auto}
+.brand h1{margin:0;font-size:28px;font-weight:800;letter-spacing:.2px}
+.brand h1 span{color:var(--acc)}
+.stats{color:var(--mute);font-size:13.5px}
+.search{flex:1 1 280px;max-width:520px;position:relative}
+.search input{width:100%;height:48px;border-radius:14px;border:1px solid var(--line2);background:var(--surface);padding:0 16px 0 44px;outline:none;font-size:15px}
+.search input:focus{border-color:var(--acc);box-shadow:0 0 0 3px rgba(26,159,255,.25)}
+.search svg{position:absolute;left:14px;top:14px;width:20px;height:20px;fill:var(--mute)}
+.filters{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;align-items:center}
+.chip,.sel{height:40px;border-radius:999px;border:1px solid var(--line);background:var(--surface);padding:0 16px;font-size:13.5px;font-weight:600;color:var(--mute);cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.chip[aria-pressed=true]{background:rgba(26,159,255,.16);border-color:var(--acc);color:var(--fg)}
+.sel{appearance:none;-webkit-appearance:none;padding-right:14px;max-width:210px;color:var(--fg)}
+.sel option{background:var(--surface)}
+.grow{flex:1}
+
+/* focus ring: same motion language as the app */
+:focus{outline:none}
+.focusable:focus-visible,.chip:focus-visible,.sel:focus-visible,.btn:focus-visible,.card:focus-visible,.close:focus-visible{
+  box-shadow:0 0 0 3px var(--bg),0 0 0 6px var(--acc);transition:box-shadow .12s}
+
+/* grid */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:14px;margin-top:10px}
+.card{position:relative;border-radius:var(--r);overflow:hidden;background:var(--surface);border:1px solid var(--line);cursor:pointer;text-align:left;padding:0;display:flex;flex-direction:column;transition:transform .16s,border-color .16s}
+.card:hover{transform:translateY(-3px);border-color:var(--line2)}
+.art{aspect-ratio:2/3;background:linear-gradient(160deg,var(--surface2),#0e1620);position:relative;overflow:hidden}
+.art img{width:100%;height:100%;object-fit:cover;display:block}
+.art .ph{position:absolute;inset:0;display:grid;place-items:center;font-size:44px;font-weight:800;color:rgba(255,255,255,.18)}
+.badge{position:absolute;top:8px;right:8px;background:rgba(11,17,24,.82);backdrop-filter:blur(6px);border:1px solid var(--line2);border-radius:999px;padding:3px 10px;font-size:12px;font-weight:700}
+.meta{padding:10px 12px 12px}
+.meta b{display:block;font-size:14px;line-height:1.25;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:2.5em}
+.meta small{color:var(--mute);font-size:12px}
+.empty{grid-column:1/-1;text-align:center;color:var(--mute);padding:70px 0}
+.empty h3{color:var(--fg);margin:0 0 6px;font-size:19px}
+.more{display:block;margin:22px auto 0}
+
+/* sheet */
+.scrim{position:fixed;inset:0;background:rgba(3,7,12,.7);backdrop-filter:blur(3px);z-index:40;opacity:0;pointer-events:none;transition:opacity .18s}
+.scrim.on{opacity:1;pointer-events:auto}
+.sheet{position:fixed;z-index:50;top:0;right:0;bottom:0;width:min(560px,100%);background:var(--surface);border-left:1px solid var(--line2);transform:translateX(100%);transition:transform .22s cubic-bezier(.2,.8,.2,1);display:flex;flex-direction:column}
+.sheet.on{transform:none}
+.shead{display:flex;gap:14px;padding:18px 18px 12px;align-items:center;border-bottom:1px solid var(--line)}
+.shead img{width:64px;height:96px;object-fit:cover;border-radius:12px;background:var(--surface2);flex:none}
+.shead .ph{width:64px;height:96px;border-radius:12px;background:var(--surface2);display:grid;place-items:center;font-size:30px;font-weight:800;color:rgba(255,255,255,.2);flex:none}
+.shead h2{margin:0;font-size:21px;line-height:1.2}
+.shead p{margin:4px 0 0;color:var(--mute);font-size:13px}
+.close{margin-left:auto;width:48px;height:48px;border-radius:14px;border:1px solid var(--line);background:var(--surface2);cursor:pointer;font-size:22px;flex:none}
+.sbody{overflow:auto;padding:14px 18px 40px;display:flex;flex-direction:column;gap:12px}
+.cfg{border:1px solid var(--line);border-radius:16px;background:var(--bg);padding:14px}
+.cfg h4{margin:0 0 2px;font-size:15.5px}
+.cfg .sub{color:var(--mute);font-size:13px;margin-bottom:10px}
+.pills{display:flex;flex-wrap:wrap;gap:6px}
+.pill{font-size:12px;font-weight:700;border-radius:999px;padding:3px 10px;background:color-mix(in srgb,var(--c) 15%,transparent);color:var(--c)}
+.line{color:var(--mute);font-size:13px;margin-bottom:8px}
+.actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.btn{height:44px;border-radius:12px;border:1px solid var(--line2);background:var(--surface2);padding:0 16px;font-weight:700;font-size:13.5px;cursor:pointer}
+.btn.pri{background:var(--acc);border-color:var(--acc);color:var(--on-acc)}
+pre{margin:12px 0 0;max-height:300px;overflow:auto;background:#070c12;border:1px solid var(--line);border-radius:12px;padding:12px;font-size:12px;line-height:1.5;white-space:pre-wrap;word-break:break-word}
+
+/* hints */
+.hints{position:fixed;left:0;right:0;bottom:0;z-index:30;display:flex;justify-content:center;gap:16px;padding:10px 12px calc(10px + env(safe-area-inset-bottom));background:linear-gradient(transparent,rgba(11,17,24,.92) 40%);pointer-events:none}
+.hints span{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:var(--mute)}
+.hints kbd{background:var(--surface2);border:1px solid var(--line2);border-radius:999px;color:var(--acc);padding:1px 8px;font-size:11px;font-weight:900;font-family:inherit}
+@media (max-width:640px){.hints{display:none}.sheet{width:100%;top:8%;border-radius:22px 22px 0 0;border-left:0;border-top:1px solid var(--line2);transform:translateY(100%)}.sheet.on{transform:none}.grid{grid-template-columns:repeat(2,1fr)}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="top">
+      <div class="brand"><h1>Win<span>Hub</span> Configs</h1><span class="stats" id="stats">Loading…</span></div>
+      <label class="search"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14"/></svg>
+        <input id="q" type="search" placeholder="Search games, devices, chipsets…" autocomplete="off" aria-label="Search games"></label>
+    </div>
+    <div class="filters" id="filters">
+      <button class="chip" data-soc="adreno8" aria-pressed="false">Adreno 8xx</button>
+      <button class="chip" data-soc="adreno7" aria-pressed="false">Adreno 7xx</button>
+      <button class="chip" data-soc="adreno6" aria-pressed="false">Adreno 6xx</button>
+      <button class="chip" data-soc="mali" aria-pressed="false">Mali</button>
+      <select class="sel" id="dxvk" aria-label="DXVK version"><option value="">Any DXVK</option></select>
+      <select class="sel" id="drv" aria-label="Graphics driver"><option value="">Any driver</option></select>
+      <span class="grow"></span>
+      <select class="sel" id="sort" aria-label="Sort"><option value="count">Most configs</option><option value="az">A → Z</option></select>
+    </div>
+  </header>
+  <main>
+    <div class="grid" id="grid" role="list"></div>
+    <button class="btn more" id="more" hidden>Show more games</button>
+  </main>
+</div>
+
+<div class="scrim" id="scrim"></div>
+<aside class="sheet" id="sheet" role="dialog" aria-modal="true" aria-label="Game configs">
+  <div class="shead" id="shead"></div>
+  <div class="sbody" id="sbody"></div>
+</aside>
+
+<div class="hints" aria-hidden="true">
+  <span><kbd>A</kbd> Open</span><span><kbd>B</kbd> Back</span><span><kbd>Y</kbd> Search</span><span><kbd>D-pad</kbd> Move</span>
+</div>
+
+<script>
+(function () {
+  'use strict';
+  var PAGE = 60;
+  var games = [], shown = 0, view = [];
+  var $ = function (id) { return document.getElementById(id); };
+  var grid = $('grid'), moreBtn = $('more'), sheet = $('sheet'), scrim = $('scrim');
+  var state = { q: '', socs: {}, dxvk: '', drv: '', sort: 'count' };
+  var lastFocus = null;
+
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function socFamily(soc) {
+    var s = (soc || '').toLowerCase();
+    var m = s.match(/adreno[^0-9]*([0-9])/);
+    if (m) return 'adreno' + m[1];
+    if (s.indexOf('mali') >= 0) return 'mali';
+    return 'other';
+  }
+  function art(g, cls) {
+    var letter = esc((g.name || '?').trim().charAt(0).toUpperCase());
+    if (!g.appid) return '<div class="' + cls + ' ph">' + letter + '</div>';
+    var base = 'https://cdn.cloudflare.steamstatic.com/steam/apps/' + g.appid + '/';
+    return '<img loading="lazy" alt="" src="' + base + 'library_600x900.jpg" data-alt="' + base + 'header.jpg" onerror="winhubImgFail(this)">';
+  }
+  window.winhubImgFail = function (img) {
+    if (img.dataset.alt) { img.src = img.dataset.alt; img.dataset.alt = ''; img.style.objectFit = 'cover'; }
+    else { img.replaceWith(Object.assign(document.createElement('div'), { className: 'ph', textContent: '▦' })); }
+  };
+
+  function matches(g) {
+    var q = state.q;
+    if (q) {
+      var hay = g._hay;
+      var ok = q.split(/\s+/).every(function (t) { return hay.indexOf(t) >= 0; });
+      if (!ok) return false;
+    }
+    var socKeys = Object.keys(state.socs).filter(function (k) { return state.socs[k]; });
+    if (!socKeys.length && !state.dxvk && !state.drv) return true;
+    return g.configs.some(function (c) {
+      if (socKeys.length && socKeys.indexOf(socFamily(c.soc)) < 0) return false;
+      if (state.dxvk && c.dxvk !== state.dxvk) return false;
+      if (state.drv && c.drv !== state.drv) return false;
+      return true;
+    });
+  }
+
+  function apply() {
+    view = games.filter(matches);
+    if (state.sort === 'az') view.sort(function (a, b) { return a.name.localeCompare(b.name); });
+    else view.sort(function (a, b) { return b.configs.length - a.configs.length || a.name.localeCompare(b.name); });
+    shown = 0; grid.innerHTML = '';
+    renderMore();
+    $('stats').textContent = view.length.toLocaleString() + ' games · ' + view.reduce(function (n, g) { return n + g.configs.length; }, 0).toLocaleString() + ' configs';
+  }
+
+  function renderMore() {
+    var end = Math.min(view.length, shown + PAGE), html = '';
+    if (!view.length) {
+      grid.innerHTML = '<div class="empty"><h3>No configs match</h3>Try a different search or clear a filter.</div>';
+      moreBtn.hidden = true; return;
+    }
+    for (var i = shown; i < end; i++) {
+      var g = view[i];
+      html += '<button class="card focusable" role="listitem" data-i="' + i + '"><div class="art">' + art(g, 'ph') +
+        '<span class="badge">' + g.configs.length + '</span></div><div class="meta"><b>' + esc(g.name) + '</b><small>' +
+        esc(topSocs(g)) + '</small></div></button>';
+    }
+    grid.insertAdjacentHTML('beforeend', html);
+    shown = end; moreBtn.hidden = shown >= view.length;
+  }
+  function topSocs(g) {
+    var seen = {}, out = [];
+    g.configs.forEach(function (c) { var s = (c.soc || '').replace(/\s*\(TM\)/, ''); if (s && !seen[s]) { seen[s] = 1; out.push(s); } });
+    return out.slice(0, 2).join(' · ') || 'Config';
+  }
+
+  function pill(text, color) { return text ? '<span class="pill" style="--c:' + color + '">' + esc(text) + '</span>' : ''; }
+  function cfgCard(g, c, idx) {
+    var line = [c.proton, c.res].filter(Boolean).join(' · ');
+    return '<div class="cfg" data-f="' + esc(c.f) + '"><h4>' + esc(c.dev || 'Unknown device') + '</h4><div class="sub">' + esc(c.soc || '') + '</div>' +
+      (line ? '<div class="line">' + esc(line) + '</div>' : '') +
+      '<div class="pills">' + pill(c.drv && ('Driver ' + c.drv), 'var(--c-driver)') + pill(c.dxvk && ('DXVK ' + c.dxvk), 'var(--c-dxvk)') +
+      pill(c.vkd3d && ('VKD3D ' + c.vkd3d), 'var(--c-vkd3d)') + pill(c.fex && c.cpu !== 'box64' && ('FEX ' + c.fex), 'var(--c-fex)') +
+      pill(c.preset, 'var(--c-rend)') + pill(c.fg && c.fg !== 'off' && c.fg !== 'none' && ('Frame gen ' + c.fg), 'var(--c-fg)') + '</div>' +
+      '<div class="actions"><button class="btn pri focusable" data-act="copy">Copy JSON</button><button class="btn focusable" data-act="view">View</button>' +
+      '<button class="btn focusable" data-act="dl">Download</button></div><div class="out"></div></div>';
+  }
+
+  function openGame(g) {
+    lastFocus = document.activeElement;
+    $('shead').innerHTML = (g.appid ? '<img alt="" src="https://cdn.cloudflare.steamstatic.com/steam/apps/' + g.appid + '/library_600x900.jpg" onerror="this.replaceWith(Object.assign(document.createElement(\'div\'),{className:\'ph\',textContent:\'▦\'}))">' :
+      '<div class="ph">' + esc(g.name.charAt(0).toUpperCase()) + '</div>') +
+      '<div><h2>' + esc(g.name) + '</h2><p>' + g.configs.length + ' config' + (g.configs.length === 1 ? '' : 's') + '</p></div>' +
+      '<button class="close focusable" id="close" aria-label="Close">✕</button>';
+    $('sbody').innerHTML = g.configs.map(function (c, i) { return cfgCard(g, c, i); }).join('');
+    $('sbody').dataset.id = g.id;
+    sheet.classList.add('on'); scrim.classList.add('on');
+    history.replaceState(null, '', '#' + encodeURIComponent(g.id));
+    setTimeout(function () { var b = sheet.querySelector('.btn'); (b || $('close')).focus(); }, 120);
+  }
+  function closeSheet() {
+    if (!sheet.classList.contains('on')) return false;
+    sheet.classList.remove('on'); scrim.classList.remove('on');
+    history.replaceState(null, '', location.pathname + location.search);
+    if (lastFocus && document.contains(lastFocus)) lastFocus.focus();
+    return true;
+  }
+
+  function cfgUrl(id, f) { return 'configs/' + encodeURIComponent(id) + '/' + encodeURIComponent(f); }
+  function fetchCfg(id, f) {
+    return fetch(cfgUrl(id, f)).then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.text(); });
+  }
+  function toast(el, msg) { var o = el.querySelector('.out'); var p = document.createElement('div'); p.className = 'line'; p.style.marginTop = '8px'; p.textContent = msg; o.prepend(p); setTimeout(function () { p.remove(); }, 2600); }
+
+  $('sbody').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-act]'); if (!b) return;
+    var card = b.closest('.cfg'), id = $('sbody').dataset.id, f = card.dataset.f, act = b.dataset.act;
+    fetchCfg(id, f).then(function (txt) {
+      if (act === 'view') {
+        var out = card.querySelector('.out'), pre = out.querySelector('pre');
+        if (pre) { pre.remove(); b.textContent = 'View'; return; }
+        out.insertAdjacentHTML('beforeend', '<pre>' + esc(txt) + '</pre>'); b.textContent = 'Hide';
+      } else if (act === 'copy') {
+        (navigator.clipboard ? navigator.clipboard.writeText(txt) : Promise.reject()).then(function () { toast(card, 'Copied to clipboard'); }, function () {
+          var ta = document.createElement('textarea'); ta.value = txt; document.body.appendChild(ta); ta.select();
+          try { document.execCommand('copy'); toast(card, 'Copied to clipboard'); } catch (x) { toast(card, 'Copy failed. Use View instead.'); }
+          ta.remove();
+        });
+      } else {
+        var a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([txt], { type: 'application/json' })); a.download = f;
+        document.body.appendChild(a); a.click(); a.remove(); setTimeout(function () { URL.revokeObjectURL(a.href); }, 2000);
+      }
+    }).catch(function (err) { toast(card, 'Could not load this config (' + err.message + ')'); });
+  });
+
+  grid.addEventListener('click', function (e) { var c = e.target.closest('.card'); if (c) openGame(view[+c.dataset.i]); });
+  moreBtn.addEventListener('click', renderMore);
+  scrim.addEventListener('click', closeSheet);
+  sheet.addEventListener('click', function (e) { if (e.target.id === 'close') closeSheet(); });
+
+  var qt;
+  $('q').addEventListener('input', function (e) { clearTimeout(qt); var v = e.target.value; qt = setTimeout(function () { state.q = v.toLowerCase().trim(); apply(); }, 120); });
+  $('filters').addEventListener('click', function (e) {
+    var b = e.target.closest('.chip'); if (!b) return;
+    var on = b.getAttribute('aria-pressed') !== 'true'; b.setAttribute('aria-pressed', on); state.socs[b.dataset.soc] = on; apply();
+  });
+  $('dxvk').addEventListener('change', function (e) { state.dxvk = e.target.value; apply(); });
+  $('drv').addEventListener('change', function (e) { state.drv = e.target.value; apply(); });
+  $('sort').addEventListener('change', function (e) { state.sort = e.target.value; apply(); });
+
+  // Load more as you scroll.
+  new IntersectionObserver(function (en) { if (en[0].isIntersecting && !moreBtn.hidden) renderMore(); }, { rootMargin: '600px' }).observe(moreBtn);
+
+  /* ---- controller + keyboard navigation (spatial) ---- */
+  function focusables() {
+    var root = sheet.classList.contains('on') ? sheet : document;
+    return Array.prototype.filter.call(root.querySelectorAll('.focusable,.chip,.sel,#q'), function (el) {
+      var r = el.getBoundingClientRect(); return r.width > 0 && r.height > 0 && !el.disabled;
+    });
+  }
+  function move(dx, dy) {
+    var cur = document.activeElement, list = focusables();
+    if (!cur || list.indexOf(cur) < 0) { if (list[0]) list[0].focus(); return; }
+    var a = cur.getBoundingClientRect(), ax = a.left + a.width / 2, ay = a.top + a.height / 2, best = null, bs = 1e12;
+    list.forEach(function (el) {
+      if (el === cur) return;
+      var r = el.getBoundingClientRect(), x = r.left + r.width / 2 - ax, y = r.top + r.height / 2 - ay;
+      var along = dx ? x * dx : y * dy, across = dx ? Math.abs(y) : Math.abs(x);
+      if (along <= 4) return;
+      var s = along + across * 2.2; if (s < bs) { bs = s; best = el; }
+    });
+    if (best) { best.focus(); best.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }
+  }
+  document.addEventListener('keydown', function (e) {
+    var t = e.target, typing = t && (t.tagName === 'INPUT' && t.type !== 'button' || t.tagName === 'SELECT');
+    if (e.key === 'Escape') { if (!closeSheet() && typing) t.blur(); return; }
+    if (typing) { if (e.key === 'ArrowDown') { e.preventDefault(); t.blur(); move(0, 1); } return; }
+    var map = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] };
+    if (map[e.key]) { e.preventDefault(); move(map[e.key][0], map[e.key][1]); }
+    else if (e.key === '/') { e.preventDefault(); $('q').focus(); }
+  });
+  // Gamepad: D-pad / left stick move, A press, B back, Y search. Repeats while held.
+  var held = {}, lastPad = 0;
+  function poll(ts) {
+    var pads = navigator.getGamepads ? navigator.getGamepads() : [];
+    for (var i = 0; i < pads.length; i++) {
+      var p = pads[i]; if (!p) continue;
+      var b = p.buttons, ax = p.axes;
+      var dir = [(b[14] && b[14].pressed) || ax[0] < -0.55 ? -1 : (b[15] && b[15].pressed) || ax[0] > 0.55 ? 1 : 0,
+                 (b[12] && b[12].pressed) || ax[1] < -0.55 ? -1 : (b[13] && b[13].pressed) || ax[1] > 0.55 ? 1 : 0];
+      if ((dir[0] || dir[1]) && ts - lastPad > (held.dir ? 140 : 320)) { held.dir = true; lastPad = ts; move(dir[0], dir[1]); }
+      if (!dir[0] && !dir[1]) held.dir = false;
+      [[0, function () { var el = document.activeElement; if (el && el.click) el.click(); }], [1, function () { if (!closeSheet()) window.scrollTo({ top: 0, behavior: 'smooth' }); }], [3, function () { $('q').focus(); }]].forEach(function (m) {
+        var down = b[m[0]] && b[m[0]].pressed;
+        if (down && !held['b' + m[0]]) m[1]();
+        held['b' + m[0]] = down;
+      });
+    }
+    requestAnimationFrame(poll);
+  }
+  requestAnimationFrame(poll);
+
+  /* ---- boot ---- */
+  fetch('configs/index.json').then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); }).then(function (data) {
+    games = data;
+    var dx = {}, dr = {};
+    games.forEach(function (g) {
+      var parts = [g.name, g.id.replace(/_/g, ' ')];
+      g.configs.forEach(function (c) { parts.push(c.dev, c.soc, c.drv, c.dxvk); if (c.dxvk) dx[c.dxvk] = (dx[c.dxvk] || 0) + 1; if (c.drv) dr[c.drv] = (dr[c.drv] || 0) + 1; });
+      g._hay = parts.join(' ').toLowerCase();
+    });
+    function fill(sel, map) {
+      Object.keys(map).sort(function (a, b) { return map[b] - map[a]; }).slice(0, 40).forEach(function (k) {
+        var o = document.createElement('option'); o.value = k; o.textContent = k + ' (' + map[k] + ')'; sel.appendChild(o);
+      });
+    }
+    fill($('dxvk'), dx); fill($('drv'), dr);
+    apply();
+    var id = decodeURIComponent(location.hash.slice(1));
+    if (id) { var g = games.filter(function (x) { return x.id === id; })[0]; if (g) openGame(g); }
+  }).catch(function (err) {
+    $('stats').textContent = '';
+    grid.innerHTML = '<div class="empty"><h3>Couldn\'t load the config library</h3>' + esc(err.message) + '. Open this page from the published site, not from a local file.</div>';
+  });
+})();
+</script>
+</body>
+</html>
